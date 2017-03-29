@@ -29,7 +29,7 @@
 </head>
 <body>
   <script>
-  
+
   var svg = d3.select('body').append('svg');
 
   var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
@@ -54,26 +54,26 @@
 
   svg.attr('width', svgWidth).attr('height', svgHeight);
 
-  d3.json('cyclist-data.json', function (err, data) {
+  d3.json('cyclist-data.json', function (err, cyclists) {
     if (err) throw err;
 
     // sort data by year
 
-    data = data.sort(function (a, b) {
+    cyclists.sort(function (a, b) {
       return a.Year - b.Year;
     });
 
     // transform time strings into date objects
 
-    data.forEach(function (d) {
+    cyclists.forEach(function (d) {
       d.Time = parseTime(d.Time);
       d.Year = parseYear(String(d.Year));
     });
 
     // define domains
 
-    x.domain([parseYear('1993'), data[data.length - 1].Year]);
-    y.domain([parseTime('36:45'), d3.max(data, function (d) { return d.Time.getTime(); })]);
+    x.domain([parseYear('1993'), cyclists[cyclists.length - 1].Year]);
+    y.domain([parseTime('36:45'), d3.max(cyclists, function (d) { return d.Time.getTime(); })]);
 
     // draw axes
 
@@ -109,7 +109,7 @@
     // draw dots
 
     g.selectAll('.dot')
-      .data(data)
+      .data(cyclists)
       .enter()
       .append('circle')
       .attr('class', 'dot')
