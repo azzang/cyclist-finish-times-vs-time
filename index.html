@@ -29,109 +29,105 @@
 </head>
 <body>
   <script>
+  
+  var svg = d3.select('body').append('svg');
 
-    var svg = d3.select('body').append('svg');
+  var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
 
-    var tooltip = d3.select('body').append('div')
-      .attr('class', 'tooltip');
+  var svgWidth = Math.min(960, window.innerWidth) || 960;
+  var svgHeight = svgWidth * (500 / 960);
 
-    var svgWidth = Math.min(960, window.innerWidth) || 960;
-    var svgHeight = svgWidth * (500 / 960);
+  var cyclistName = tooltip.append('div');
+  var cyclistNationality = tooltip.append('div');
 
-    var cyclistName = tooltip.append('div');
-    var cyclistNationality = tooltip.append('div');
+  var margin = { top: 20, right: 20, bottom: 30, left: 40 };
+  var width = svgWidth - margin.left - margin.right;
+  var height = svgHeight - margin.top - margin.bottom;
 
-    svg.attr('width', svgWidth)
-      .attr('height', svgHeight);
+  var x = d3.scaleTime().range([0, width]);
+  var y = d3.scaleTime().range([height, 0]);
 
-    var margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    var width = svgWidth - margin.left - margin.right;
-    var height = svgHeight - margin.top - margin.bottom;
+  var parseTime = d3.timeParse('%M:%S');
+  var parseYear = d3.timeParse('%Y');
 
-    var x = d3.scaleTime().range([0, width]);
-    var y = d3.scaleTime().range([height, 0]);
+  var g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    var parseTime = d3.timeParse('%M:%S');
-    var parseYear = d3.timeParse('%Y');
+  svg.attr('width', svgWidth).attr('height', svgHeight);
 
-    var g = svg.append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+  d3.json('cyclist-data.json', function (err, data) {
+    if (err) throw err;
 
-    d3.json('cyclist-data.json', function(err, data) {
-      if (err) throw err;
+    // sort data by year
 
-      // sort data by year
-
-      data = data.sort(function(a, b) {
-        return a.Year - b.Year;
-      });
-
-      // transform time strings into date objects
-
-      data.forEach(function(d) {
-        d.Time = parseTime(d.Time);
-        d.Year = parseYear(String(d.Year));
-      });
-
-      // define domains
-
-      x.domain([parseYear('1993'), data[data.length - 1].Year]);
-      y.domain([parseTime('36:45'), d3.max(data, function(d) { return d.Time.getTime(); })]);
-
-      // draw axes
-
-      g.append('g')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(d3.axisBottom(x));
-
-      g.append('g')
-        .call(d3.axisLeft(y).ticks(10).tickFormat(d3.timeFormat('%M:%S')))
-        .append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', 6)
-        .attr('dy', '0.71em')
-        .attr('text-anchor', 'end');
-
-      // label axes
-
-      g.append('text')
-        .attr('class', 'label')
-        .attr('text-anchor', 'end')
-        .attr('x', width)
-        .attr('y', height - 6)
-        .text('Year');
-
-      g.append('text')
-        .attr('class', 'label')
-        .attr('text-anchor', 'end')
-        .attr('y', 6)
-        .attr('dy', '.75em')
-        .attr('transform', 'rotate(-90)')
-        .text('Finish Time');
-
-      // draw dots
-
-      g.selectAll('.dot')
-        .data(data)
-        .enter()
-        .append('circle')
-        .attr('class', 'dot')
-        .attr('r', 3.5)
-        .attr('cx', function(d) { return x(d.Year); })
-        .attr('cy', function(d) { return y(d.Time); })
-        .on('mouseover', function(d) {
-          tooltip.style('left', this.getAttribute('cx') + 'px')
-                  .style('top', this.getAttribute('cy') - 3.5 + 'px')
-                  .style('display', 'inline');
-
-          cyclistName.text('Cyclist: ' + d.Name);
-          cyclistNationality.text('Nationality: ' + d.Nationality);
-        }).on('mouseout', function() {
-          tooltip.style('display', 'none');
-        });
-
+    data = data.sort(function (a, b) {
+      return a.Year - b.Year;
     });
 
+    // transform time strings into date objects
+
+    data.forEach(function (d) {
+      d.Time = parseTime(d.Time);
+      d.Year = parseYear(String(d.Year));
+    });
+
+    // define domains
+
+    x.domain([parseYear('1993'), data[data.length - 1].Year]);
+    y.domain([parseTime('36:45'), d3.max(data, function (d) { return d.Time.getTime(); })]);
+
+    // draw axes
+
+    g.append('g')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(d3.axisBottom(x));
+
+    g.append('g')
+      .call(d3.axisLeft(y).ticks(10).tickFormat(d3.timeFormat('%M:%S')))
+      .append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 6)
+      .attr('dy', '0.71em')
+      .attr('text-anchor', 'end');
+
+    // label axes
+
+    g.append('text')
+      .attr('class', 'label')
+      .attr('text-anchor', 'end')
+      .attr('x', width)
+      .attr('y', height - 6)
+      .text('Year');
+
+    g.append('text')
+      .attr('class', 'label')
+      .attr('text-anchor', 'end')
+      .attr('y', 6)
+      .attr('dy', '.75em')
+      .attr('transform', 'rotate(-90)')
+      .text('Finish Time');
+
+    // draw dots
+
+    g.selectAll('.dot')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('class', 'dot')
+      .attr('r', 3.5)
+      .attr('cx', function (d) { return x(d.Year); })
+      .attr('cy', function (d) { return y(d.Time); })
+      .on('mouseover', function (d) {
+        tooltip.style('left', this.getAttribute('cx') + 'px')
+                .style('top', (this.getAttribute('cy') - 3.5) + 'px')
+                .style('display', 'inline');
+
+        cyclistName.text('Cyclist: ' + d.Name);
+        cyclistNationality.text('Nationality: ' + d.Nationality);
+      })
+      .on('mouseout', function () {
+        tooltip.style('display', 'none');
+      });
+  });
   </script>
 </body>
 </html>
